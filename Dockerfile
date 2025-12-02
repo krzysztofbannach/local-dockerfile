@@ -23,6 +23,9 @@ RUN go install github.com/hidetatz/kubecolor/cmd/kubecolor@latest
 FROM $GOLANG_IMAGE AS goimports_builder
 RUN go install golang.org/x/tools/cmd/goimports@latest
 
+FROM $GOLANG_IMAGE AS controller_gen_builder
+RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@latest
+
 FROM $GOLANG_IMAGE AS mockgen_builder
 # TODO kbannach
 #RUN go install $MOCKGEN_DEPENDENCY
@@ -183,6 +186,7 @@ RUN setcap -r /usr/bin/vault
 ENV VAULT_ADDR="http://localhost:8200"
 
 COPY --from=goimports_builder /go/bin/goimports /usr/bin/goimports
+COPY --from=controller_gen_builder /go/bin/controller-gen /usr/bin/controller-gen
 COPY --from=mockgen_builder /go/bin/mockgen /usr/bin/mockgen
 COPY --from=govulncheck_builder /go/bin/govulncheck /usr/bin/govulncheck
 RUN pip install pre-commit
