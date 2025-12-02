@@ -125,7 +125,7 @@ COPY --from=jq_image /jq /usr/local/bin/jq
 COPY --from=yq_image /usr/bin/yq /usr/local/bin/yq
 
 ###################### main apt install ######################
-RUN apt update && apt install -y wget curl unzip bash-completion lsb-release libcap2-bin unzip vim git-all software-properties-common && apt clean
+RUN apt update && apt install -y build-essential wget curl unzip bash-completion lsb-release libcap2-bin unzip vim git-all software-properties-common && apt clean
 RUN add-apt-repository -y ppa:deadsnakes/ppa && apt update && apt install -y python3.12 && apt clean && ln -s /usr/bin/python3.12 /usr/bin/python
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
