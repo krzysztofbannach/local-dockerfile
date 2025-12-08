@@ -221,6 +221,11 @@ RUN curl -fsSLo /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/
 RUN cd /tmp && unzip -q /tmp/kubelogin.zip && cd -
 RUN mv /tmp/bin/linux_amd64/kubelogin /usr/bin/kubelogin
 
+ARG KUTTL_VERSION="0.24.0"
+RUN curl -fsSLo /tmp/kuttl "https://github.com/kudobuilder/kuttl/releases/download/v${KUTTL_VERSION}/kubectl-kuttl_0.24.0_linux_x86_64"
+RUN mv /tmp/kuttl /usr/bin/kuttl
+RUN chmod +x /usr/bin/kuttl
+
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
 #RUN add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main"
