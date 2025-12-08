@@ -211,12 +211,12 @@ RUN chmod 644 /root/.ssh/*.pub
 ENV GOPROXY="https://proxy.golang.org,direct"
 ENV GOPRIVATE="git.dynalabs.io/dok/*,github.com/dok/*,bitbucket.lab.dynatrace.org/*"
 
-ARG KUBECTL_VERSION="1.28.11"
-RUN curl -fsSLo /tmp/kubectl "https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+ARG KUBECTL_VERSION="1.34.2"
+RUN curl -fsSLo /tmp/kubectl "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 RUN mv /tmp/kubectl /usr/bin/kubectl
 RUN chmod +x /usr/bin/kubectl
 
-ARG KUBELOGIN_VERSION="0.2.12"
+ARG KUBELOGIN_VERSION="0.2.13"
 RUN curl -fsSLo /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/download/v${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip"
 RUN cd /tmp && unzip -q /tmp/kubelogin.zip && cd -
 RUN mv /tmp/bin/linux_amd64/kubelogin /usr/bin/kubelogin
