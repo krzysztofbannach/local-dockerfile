@@ -2,45 +2,57 @@ ARG REPOSITORY=256120352618.dkr.ecr.us-east-1.amazonaws.com/dok-cicd-registry
 ARG IMAGE=library/ubuntu:22.04
 ARG OPERATORS_DOK_3RD_PARTY_IMAGE=dok-3rd-party:0.0.12-20250731-084101
 ARG GOLANG_IMAGE=golang:1.24
+ARG K9S_VERSION=v0.50.16
+ARG POPEYE_VERSION=v0.22.1
+ARG KUBECOLOR_VERSION=v0.0.25
+ARG CONTROLLER_GEN_VERSION=v0.19.0
+ARG DELVE_VERSION=v1.25.2
+ARG HELM_VERSION=v4.0.1
 ARG JQ_IMAGE=ghcr.io/jqlang/jq:1.8.1
 ARG YQ_IMAGE=mikefarah/yq:4.46.1
+ARG MOCKGEN_VERSION=v1.5.0
 ARG KIND_VERSION=v0.30.0
 
 FROM $GOLANG_IMAGE AS k9s_builder
+ARG K9S_VERSION
 RUN git clone https://github.com/derailed/k9s.git
-RUN cd k9s && make build
+RUN cd k9s && git checkout $K9S_VERSION && make build
 
 FROM $GOLANG_IMAGE AS popeye_builder
+ARG POPEYE_VERSION
 RUN git clone https://github.com/derailed/popeye
-RUN cd popeye && go install
+RUN cd popeye && git checkout $POPEYE_VERSION && go install
 
 FROM $GOLANG_IMAGE AS tfenv_builder
 RUN git clone --depth=1 https://github.com/tfutils/tfenv.git /usr/.tfenv
 
 FROM $GOLANG_IMAGE AS kubecolor_builder
-RUN go install github.com/hidetatz/kubecolor/cmd/kubecolor@latest
+ARG KUBECOLOR_VERSION
+RUN go install github.com/hidetatz/kubecolor/cmd/kubecolor@$KUBECOLOR_VERSION
 
 FROM $GOLANG_IMAGE AS goimports_builder
 RUN go install golang.org/x/tools/cmd/goimports@latest
 
 FROM $GOLANG_IMAGE AS controller_gen_builder
-RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@latest
+ARG CONTROLLER_GEN_VERSION
+RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@$CONTROLLER_GEN_VERSION
 
 FROM $GOLANG_IMAGE AS mockgen_builder
-# TODO kbannach
-#RUN go install $MOCKGEN_DEPENDENCY
-RUN go install github.com/golang/mock/mockgen@v1.6.0
+ARG MOCKGEN_VERSION
+RUN go install github.com/golang/mock/mockgen@$MOCKGEN_VERSION
 
 FROM $GOLANG_IMAGE AS govulncheck_builder
 RUN go install golang.org/x/vuln/cmd/govulncheck@latest
 
 FROM $GOLANG_IMAGE AS delve_builder
+ARG DELVE_VERSION
 RUN git clone https://github.com/go-delve/delve
-RUN cd delve && go install github.com/go-delve/delve/cmd/dlv
+RUN cd delve && git checkout $DELVE_VERSION && go install github.com/go-delve/delve/cmd/dlv
 
 FROM $GOLANG_IMAGE AS helm_builder
+ARG HELM_VERSION
 RUN git clone https://github.com/helm/helm.git /opt/helm
-RUN cd /opt/helm && make
+RUN cd /opt/helm && git checkout $HELM_VERSION && make
 
 FROM $GOLANG_IMAGE AS kind_builder
 ARG KIND_VERSION
