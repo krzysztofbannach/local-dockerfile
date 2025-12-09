@@ -4,7 +4,7 @@ ARG OPERATORS_DOK_3RD_PARTY_IMAGE=dok-3rd-party:0.0.12-20250731-084101
 ARG GOLANG_IMAGE=golang:1.24
 ARG JQ_IMAGE=ghcr.io/jqlang/jq:1.8.1
 ARG YQ_IMAGE=mikefarah/yq:4.46.1
-ARG MOCKGEN_DEPENDENCY=github.com/golang/mock/mockgen@v1.5.0
+ARG KIND_VERSION=v0.30.0
 
 FROM $GOLANG_IMAGE AS k9s_builder
 RUN git clone https://github.com/derailed/k9s.git
@@ -41,6 +41,10 @@ RUN cd delve && go install github.com/go-delve/delve/cmd/dlv
 FROM $GOLANG_IMAGE AS helm_builder
 RUN git clone https://github.com/helm/helm.git /opt/helm
 RUN cd /opt/helm && make
+
+FROM $GOLANG_IMAGE AS kind_builder
+ARG KIND_VERSION
+RUN go install sigs.k8s.io/kind@$KIND_VERSION
 
 FROM $JQ_IMAGE AS jq_image
 
@@ -187,6 +191,7 @@ ENV VAULT_ADDR="http://localhost:8200"
 
 COPY --from=goimports_builder /go/bin/goimports /usr/bin/goimports
 COPY --from=controller_gen_builder /go/bin/controller-gen /usr/bin/controller-gen
+COPY --from=kind_builder /go/bin/kind /usr/bin/kind
 COPY --from=mockgen_builder /go/bin/mockgen /usr/bin/mockgen
 COPY --from=govulncheck_builder /go/bin/govulncheck /usr/bin/govulncheck
 RUN pip install pre-commit
