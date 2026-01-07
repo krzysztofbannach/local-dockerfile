@@ -226,7 +226,7 @@ RUN chmod 600 /root/.ssh/*
 RUN chmod 644 /root/.ssh/*.pub
 
 ENV GOPROXY="https://proxy.golang.org,direct"
-ENV GOPRIVATE="git.dynalabs.io/dok/*,github.com/dok/*,bitbucket.lab.dynatrace.org/*"
+ENV GOPRIVATE="git.dynalabs.io/dok/*,github.com/dynatrace-infrastructure/*,bitbucket.lab.dynatrace.org/*"
 
 ARG KUBECTL_VERSION="1.34.2"
 RUN curl -fsSLo /tmp/kubectl "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
