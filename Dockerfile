@@ -1,7 +1,7 @@
 ARG REPOSITORY=256120352618.dkr.ecr.us-east-1.amazonaws.com/dok-cicd-registry
 ARG IMAGE=library/ubuntu:22.04
 ARG OPERATORS_DOK_3RD_PARTY_IMAGE=dok-3rd-party:0.0.12-20250731-084101
-ARG GOLANG_IMAGE=golang:1.24
+ARG GOLANG_IMAGE=golang:1.25
 ARG K9S_VERSION=v0.50.16
 ARG POPEYE_VERSION=v0.22.1
 ARG KUBECOLOR_VERSION=v0.0.25
@@ -15,56 +15,58 @@ ARG KIND_VERSION=v0.30.0
 ARG KUBEBUILDER_VERSION=v4.11.1
 ARG HELM_DOCS_VERSION=latest
 
-FROM $GOLANG_IMAGE AS k9s_builder
+FROM $GOLANG_IMAGE AS golang_base
+
+FROM golang_base AS k9s_builder
 ARG K9S_VERSION
 RUN git clone https://github.com/derailed/k9s.git
 RUN cd k9s && git checkout $K9S_VERSION && make build
 
-FROM $GOLANG_IMAGE AS popeye_builder
+FROM golang_base AS popeye_builder
 ARG POPEYE_VERSION
 RUN git clone https://github.com/derailed/popeye
 RUN cd popeye && git checkout $POPEYE_VERSION && go install
 
-FROM $GOLANG_IMAGE AS tfenv_builder
+FROM golang_base AS tfenv_builder
 RUN git clone --depth=1 https://github.com/tfutils/tfenv.git /usr/.tfenv
 
-FROM $GOLANG_IMAGE AS kubecolor_builder
+FROM golang_base AS kubecolor_builder
 ARG KUBECOLOR_VERSION
 RUN go install github.com/hidetatz/kubecolor/cmd/kubecolor@$KUBECOLOR_VERSION
 
-FROM $GOLANG_IMAGE AS goimports_builder
+FROM golang_base AS goimports_builder
 RUN go install golang.org/x/tools/cmd/goimports@latest
 
-FROM $GOLANG_IMAGE AS controller_gen_builder
+FROM golang_base AS controller_gen_builder
 ARG CONTROLLER_GEN_VERSION
 RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@$CONTROLLER_GEN_VERSION
 
-FROM $GOLANG_IMAGE AS mockgen_builder
+FROM golang_base AS mockgen_builder
 ARG MOCKGEN_VERSION
 RUN go install github.com/golang/mock/mockgen@$MOCKGEN_VERSION
 
-FROM $GOLANG_IMAGE AS govulncheck_builder
+FROM golang_base AS govulncheck_builder
 RUN go install golang.org/x/vuln/cmd/govulncheck@latest
 
-FROM $GOLANG_IMAGE AS delve_builder
+FROM golang_base AS delve_builder
 ARG DELVE_VERSION
 RUN git clone https://github.com/go-delve/delve
 RUN cd delve && git checkout $DELVE_VERSION && go install github.com/go-delve/delve/cmd/dlv
 
-FROM $GOLANG_IMAGE AS helm_builder
+FROM golang_base AS helm_builder
 ARG HELM_VERSION
 RUN git clone https://github.com/helm/helm.git /opt/helm
 RUN cd /opt/helm && git checkout $HELM_VERSION && make
 
-FROM $GOLANG_IMAGE AS kind_builder
+FROM golang_base AS kind_builder
 ARG KIND_VERSION
 RUN go install sigs.k8s.io/kind@$KIND_VERSION
 
-FROM $GOLANG_IMAGE AS kubebuilder_builder
+FROM golang_base AS kubebuilder_builder
 ARG KUBEBUILDER_VERSION
 RUN go install sigs.k8s.io/kubebuilder/v4@$KUBEBUILDER_VERSION
 
-FROM $GOLANG_IMAGE AS helm_docs_builder
+FROM golang_base AS helm_docs_builder
 ARG HELM_DOCS_VERSION
 RUN go install github.com/norwoodj/helm-docs/cmd/helm-docs@$HELM_DOCS_VERSION
 
@@ -159,10 +161,9 @@ RUN wget https://github.com/tmccombs/hcl2json/releases/download/v0.6.4/hcl2json_
 RUN mv hcl2json_linux_amd64 /usr/bin/hcl2json
 RUN chmod +x /usr/bin/hcl2json
 
-RUN wget -O /tmp/go.tgz https://dl.google.com/go/go1.23.1.linux-amd64.tar.gz
-RUN rm -rf /usr/local/go && tar -C /usr/local -xzf /tmp/go.tgz
+COPY --from=golang_base /usr/local/go /usr/local/go
 ENV PATH="/usr/local/go/bin:${PATH}"
-ENV GOPATH="/opt/go/"
+ENV GOPATH="/opt/go"
 ENV PATH="${PATH}:${GOPATH}/bin"
 
 # binary will be $(go env GOPATH)/bin/golangci-lint
