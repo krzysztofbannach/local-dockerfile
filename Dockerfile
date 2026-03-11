@@ -12,6 +12,8 @@ ARG JQ_IMAGE=ghcr.io/jqlang/jq:1.8.1
 ARG YQ_IMAGE=mikefarah/yq:4.46.1
 ARG MOCKGEN_VERSION=v1.5.0
 ARG KIND_VERSION=v0.30.0
+ARG KUBEBUILDER_VERSION=v4.11.1
+ARG HELM_DOCS_VERSION=latest
 
 FROM $GOLANG_IMAGE AS k9s_builder
 ARG K9S_VERSION
@@ -57,6 +59,14 @@ RUN cd /opt/helm && git checkout $HELM_VERSION && make
 FROM $GOLANG_IMAGE AS kind_builder
 ARG KIND_VERSION
 RUN go install sigs.k8s.io/kind@$KIND_VERSION
+
+FROM $GOLANG_IMAGE AS kubebuilder_builder
+ARG KUBEBUILDER_VERSION
+RUN go install sigs.k8s.io/kubebuilder/v4@$KUBEBUILDER_VERSION
+
+FROM $GOLANG_IMAGE AS helm_docs_builder
+ARG HELM_DOCS_VERSION
+RUN go install github.com/norwoodj/helm-docs/cmd/helm-docs@$HELM_DOCS_VERSION
 
 FROM $JQ_IMAGE AS jq_image
 
@@ -204,6 +214,8 @@ ENV VAULT_ADDR="http://localhost:8200"
 COPY --from=goimports_builder /go/bin/goimports /usr/bin/goimports
 COPY --from=controller_gen_builder /go/bin/controller-gen /usr/bin/controller-gen
 COPY --from=kind_builder /go/bin/kind /usr/bin/kind
+COPY --from=kubebuilder_builder /go/bin/kubebuilder /usr/bin/kubebuilder
+COPY --from=helm_docs_builder /go/bin/helm-docs /usr/bin/helm-docs
 COPY --from=mockgen_builder /go/bin/mockgen /usr/bin/mockgen
 COPY --from=govulncheck_builder /go/bin/govulncheck /usr/bin/govulncheck
 RUN pip install pre-commit
