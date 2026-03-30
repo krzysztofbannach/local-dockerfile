@@ -2,6 +2,7 @@ ARG REPOSITORY=256120352618.dkr.ecr.us-east-1.amazonaws.com/dok-cicd-registry
 ARG IMAGE=library/ubuntu:22.04
 ARG OPERATORS_DOK_3RD_PARTY_IMAGE=dok-3rd-party:0.0.12-20250731-084101
 ARG GOLANG_IMAGE=golang:1.25
+ARG ALPINE_IMAGE=alpine:3.19
 ARG K9S_VERSION=v0.50.16
 ARG POPEYE_VERSION=v0.22.1
 ARG KUBECOLOR_VERSION=v0.0.25
@@ -14,8 +15,14 @@ ARG MOCKGEN_VERSION=v1.5.0
 ARG KIND_VERSION=v0.30.0
 ARG KUBEBUILDER_VERSION=v4.11.1
 ARG HELM_DOCS_VERSION=latest
+ARG KUBECTL_VERSION=1.34.2
+ARG KUBELOGIN_VERSION=0.2.13
+ARG KUTTL_VERSION=0.24.0
 
 FROM $GOLANG_IMAGE AS golang_base
+
+FROM $ALPINE_IMAGE AS alpine_base
+RUN apk add --no-cache curl unzip
 
 FROM golang_base AS k9s_builder
 ARG K9S_VERSION
@@ -69,6 +76,24 @@ RUN go install sigs.k8s.io/kubebuilder/v4@$KUBEBUILDER_VERSION
 FROM golang_base AS helm_docs_builder
 ARG HELM_DOCS_VERSION
 RUN go install github.com/norwoodj/helm-docs/cmd/helm-docs@$HELM_DOCS_VERSION
+
+FROM alpine_base AS kubectl_builder
+ARG KUBECTL_VERSION
+RUN curl -fsSLo /usr/bin/kubectl "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
+ && chmod +x /usr/bin/kubectl
+
+FROM alpine_base AS kubelogin_builder
+ARG KUBELOGIN_VERSION
+RUN curl -fsSLo /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/download/v${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip" \
+ && unzip -q /tmp/kubelogin.zip -d /tmp \
+ && mv /tmp/bin/linux_amd64/kubelogin /usr/bin/kubelogin \
+ && chmod +x /usr/bin/kubelogin \
+ && rm -rf /tmp/kubelogin.zip /tmp/bin
+
+FROM alpine_base AS kuttl_builder
+ARG KUTTL_VERSION
+RUN curl -fsSLo /usr/bin/kuttl "https://github.com/kudobuilder/kuttl/releases/download/v${KUTTL_VERSION}/kubectl-kuttl_0.24.0_linux_x86_64" \
+ && chmod +x /usr/bin/kuttl
 
 FROM $JQ_IMAGE AS jq_image
 
@@ -219,6 +244,9 @@ COPY --from=kubebuilder_builder /go/bin/kubebuilder /usr/bin/kubebuilder
 COPY --from=helm_docs_builder /go/bin/helm-docs /usr/bin/helm-docs
 COPY --from=mockgen_builder /go/bin/mockgen /usr/bin/mockgen
 COPY --from=govulncheck_builder /go/bin/govulncheck /usr/bin/govulncheck
+COPY --from=kubectl_builder /usr/bin/kubectl /usr/bin/kubectl
+COPY --from=kubelogin_builder /usr/bin/kubelogin /usr/bin/kubelogin
+COPY --from=kuttl_builder /usr/bin/kuttl /usr/bin/kuttl
 RUN pip install pre-commit
 
 RUN mkdir -p /usr/share/terraform/plugins; terraform providers mirror /usr/share/terraform/plugins; rm -rf /tmp/*;
@@ -240,21 +268,6 @@ RUN chmod 644 /root/.ssh/*.pub
 
 ENV GOPROXY="https://proxy.golang.org,direct"
 ENV GOPRIVATE="git.dynalabs.io/dok/*,github.com/dynatrace-infrastructure/*,bitbucket.lab.dynatrace.org/*"
-
-ARG KUBECTL_VERSION="1.34.2"
-RUN curl -fsSLo /tmp/kubectl "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
-RUN mv /tmp/kubectl /usr/bin/kubectl
-RUN chmod +x /usr/bin/kubectl
-
-ARG KUBELOGIN_VERSION="0.2.13"
-RUN curl -fsSLo /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/download/v${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip"
-RUN cd /tmp && unzip -q /tmp/kubelogin.zip && cd -
-RUN mv /tmp/bin/linux_amd64/kubelogin /usr/bin/kubelogin
-
-ARG KUTTL_VERSION="0.24.0"
-RUN curl -fsSLo /tmp/kuttl "https://github.com/kudobuilder/kuttl/releases/download/v${KUTTL_VERSION}/kubectl-kuttl_0.24.0_linux_x86_64"
-RUN mv /tmp/kuttl /usr/bin/kuttl
-RUN chmod +x /usr/bin/kuttl
 
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
