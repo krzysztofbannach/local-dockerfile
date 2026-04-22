@@ -220,14 +220,8 @@ ARG TERRAFORM_VERSION=1.13.1
 RUN tfenv install ${TERRAFORM_VERSION}; tfenv use ${TERRAFORM_VERSION}
 
 COPY --from=kubecolor_builder /go/bin/kubecolor /usr/bin/kubecolor
-RUN echo 'alias k=kubecolor' >>~/.bashrc
 #RUN echo 'complete -F __start_kubectl k' >>~/.bashrc
 #RUN echo 'complete -o default -F __start_kubectl k' >>~/.bashrc
-RUN echo "alias kccc='k config current-context'" >> ~/.bashrc
-RUN echo "alias kcgc='k config get-contexts'" >> ~/.bashrc
-RUN echo "alias kcuc='k config use-context'" >> ~/.bashrc
-RUN echo "alias tf='terraform'" >> ~/.bashrc
-RUN echo "alias gisoft='git reset --soft '" >> ~/.bashrc
 
 RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 RUN gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
