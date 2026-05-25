@@ -21,6 +21,7 @@ ARG KUTTL_VERSION=0.24.0
 ARG AWSCLI_VERSION="2.17.5"
 ARG GOLANGCI_LINT_VERSION="v1.62.2"
 ARG GOSEC_VERSION="v2.22.10"
+ARG HELMFILE_VERSION="1.5.2"
 
 FROM $GOLANG_IMAGE AS golang_base
 
@@ -95,8 +96,15 @@ RUN curl -fsSLo /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/
 
 FROM alpine_base AS kuttl_builder
 ARG KUTTL_VERSION
-RUN curl -fsSLo /usr/bin/kuttl "https://github.com/kudobuilder/kuttl/releases/download/v${KUTTL_VERSION}/kubectl-kuttl_0.24.0_linux_x86_64" \
+RUN curl -fsSLo /usr/bin/kuttl "https://github.com/kudobuilder/kuttl/releases/download/v${KUTTL_VERSION}/kubectl-kuttl_${KUTTL_VERSION}_linux_x86_64" \
  && chmod +x /usr/bin/kuttl
+
+FROM alpine_base AS helmfile_builder
+ARG HELMFILE_VERSION
+RUN wget "https://github.com/helmfile/helmfile/releases/download/v${HELMFILE_VERSION}/helmfile_${HELMFILE_VERSION}_linux_386.tar.gz" \
+ && tar -zxvf helmfile_${HELMFILE_VERSION}_linux_386.tar.gz \
+ && mv helmfile /usr/bin/helmfile \
+ && chmod +x /usr/bin/helmfile
 
 FROM $JQ_IMAGE AS jq_image
 
@@ -244,6 +252,7 @@ COPY --from=govulncheck_builder /go/bin/govulncheck /usr/bin/govulncheck
 COPY --from=kubectl_builder /usr/bin/kubectl /usr/bin/kubectl
 COPY --from=kubelogin_builder /usr/bin/kubelogin /usr/bin/kubelogin
 COPY --from=kuttl_builder /usr/bin/kuttl /usr/bin/kuttl
+COPY --from=helmfile_builder /usr/bin/helmfile /usr/bin/helmfile
 RUN pip install pre-commit
 
 RUN mkdir -p /usr/share/terraform/plugins; terraform providers mirror /usr/share/terraform/plugins; rm -rf /tmp/*;
