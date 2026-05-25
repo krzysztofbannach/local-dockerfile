@@ -48,7 +48,7 @@ function run() {
     $GO_LIB_VOLUME \
     $USE_HOST_NETWORK \
     $CUSTOM_PORT \
-    --rm -it local-docker:latest
+    --rm -it local-docker:latest /bin/bash --login
 }
 
 function main() {
