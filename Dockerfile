@@ -1,5 +1,5 @@
 ARG REPOSITORY=256120352618.dkr.ecr.us-east-1.amazonaws.com/dok-cicd-registry
-ARG IMAGE=library/ubuntu:22.04
+ARG IMAGE=library/ubuntu:26.04
 ARG OPERATORS_DOK_3RD_PARTY_IMAGE=dok-3rd-party:0.0.12-20250731-084101
 ARG GOLANG_IMAGE=golang:1.25
 ARG ALPINE_IMAGE=alpine:3.19
@@ -275,9 +275,16 @@ RUN chmod 644 /root/.ssh/*.pub
 ENV GOPROXY="https://proxy.golang.org,direct"
 ENV GOPRIVATE="git.dynalabs.io/dok/*,github.com/dynatrace-infrastructure/*,bitbucket.lab.dynatrace.org/*"
 
-RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg
-RUN echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
-#RUN add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main"
+RUN mkdir -p /etc/apt/keyrings \
+ && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg
+RUN set -eux; \
+    ubuntu_codename="$(. /etc/os-release && echo "${VERSION_CODENAME:-}")"; \
+    case "$ubuntu_codename" in \
+        jammy|noble) azure_cli_codename="$ubuntu_codename" ;; \
+        *) azure_cli_codename="noble" ;; \
+    esac; \
+    echo "Using Azure CLI repo suite '$azure_cli_codename' for Ubuntu codename '${ubuntu_codename:-unknown}'"; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $azure_cli_codename main" > /etc/apt/sources.list.d/azure-cli.list
 RUN apt update && apt install -y azure-cli && apt clean
 
 #ARG CONTAINER_USERNAME="gl0x"
