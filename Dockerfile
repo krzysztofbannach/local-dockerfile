@@ -189,7 +189,9 @@ COPY --from=jq_image /jq /usr/local/bin/jq
 COPY --from=yq_image /usr/bin/yq /usr/local/bin/yq
 
 ###################### main apt install ######################
-RUN apt update && apt install -y build-essential wget curl unzip bash-completion lsb-release libcap2-bin unzip vim git-all software-properties-common gettext && apt clean
+RUN apt update && apt install -y build-essential wget curl unzip bash-completion lsb-release libcap2-bin unzip vim git-all \
+    software-properties-common gettext gnome-keyring libsecret-1-0 \
+    && apt clean
 RUN add-apt-repository -y ppa:deadsnakes/ppa && apt update && apt install -y python3.12 && apt clean && ln -s /usr/bin/python3.12 /usr/bin/python
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
@@ -286,6 +288,17 @@ RUN set -eux; \
     echo "Using Azure CLI repo suite '$azure_cli_codename' for Ubuntu codename '${ubuntu_codename:-unknown}'"; \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $azure_cli_codename main" > /etc/apt/sources.list.d/azure-cli.list
 RUN apt update && apt install -y azure-cli && apt clean
+
+RUN mkdir -p -m 755 /etc/apt/keyrings \
+ && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+ && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list
+RUN apt update && apt install -y gh && apt clean
+
+RUN DTCTL_INSTALL_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/dynatrace-oss/dtctl/main/install.sh | sh
+
+ENV PATH="/root/.local/bin:/root/.claude/skills/bin:${PATH}"
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 #ARG CONTAINER_USERNAME="gl0x"
 # add DoK user

@@ -1,3 +1,9 @@
 .idea/
 .ssh/
 aws/
+
+# Claude auth/state — created at container start by run.sh; must not be committed
+misc/.claude.json
+
+# Backup files created during debugging
+*.bak
