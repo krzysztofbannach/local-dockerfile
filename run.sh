@@ -17,6 +17,7 @@ DOCKER_SOCK_VOLUME="-v /var/run/docker.sock:/var/run/docker.sock"
 
 AWS_VOLUME="-v $HOME/.aws:/root/.aws"
 GCLOUD_VOLUME="-v $HOME/.config/gcloud:/root/.config/gcloud/"
+AZURE_VOLUME="-v $HOME/.azure:/root/.azure"
 GO_LIB_VOLUME="--mount source=local-dev-go-pkg-path,target=/opt/go/pkg"
 CLAUDE_STATE_VOLUME="-v claude-state:/root/.claude"
 CLAUDE_JSON_VOLUME="-v ./misc/.claude.json:/root/.claude.json"
@@ -138,6 +139,7 @@ function run() {
     $NET_ADMIN_CAPABILITY \
     $AWS_VOLUME \
     $GCLOUD_VOLUME \
+    $AZURE_VOLUME \
     $WORKSPACE_VOLUME \
     $DOCKER_SOCK_VOLUME \
     $ALIASES_VOLUME \
