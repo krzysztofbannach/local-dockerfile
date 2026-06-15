@@ -30,7 +30,7 @@ set -euo pipefail
 BIN_DIR="$HOME/.claude/skills/bin"
 PROFILE="${BOOTSTRAP_PROFILE:-$HOME/.bashrc}"
 SKILLS=(dt-github dt-atlassian-pii dt-bbctl dt-juno-mcp dt-skill-creator dynatrace-control dt-slides)
-MCP_URL="https://mcp.juno.internal.dynatrace.com/mcp"
+MCP_URL="https://juno-mcp.production.juno-ape.internal.dynatracelabs.com/mcp"
 
 ARCH_RAW=$(uname -m)
 case "$ARCH_RAW" in
