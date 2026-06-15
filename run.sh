@@ -37,7 +37,7 @@ JUNOCTL_CONFIG_VOLUME="-v $HOME/.config/junoctl:/root/.config/junoctl"
 # credentials.yaml when the OS keyring is unavailable.  Bind-mounting the dir
 # persists the credentials file across container restarts.
 ACLI_CONFIG_VOLUME="-v $HOME/.acli-pii:/root/.acli-pii"
-ICM_DATA_VOLUME="-v icm-data:/root/.icm"
+ICM_DATA_VOLUME="-v $HOME/.local/share/icm:/root/.local/share/icm"
 
 # ── Auth token injection from host GNOME Keyring ────────────────────────────────
 # gh, junoctl, bbctl, and acli-pii all store tokens in the OS keyring which does
