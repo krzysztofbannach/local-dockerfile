@@ -295,7 +295,8 @@ RUN mkdir -p -m 755 /etc/apt/keyrings \
  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list
 RUN apt update && apt install -y gh && apt clean
 
-RUN DTCTL_INSTALL_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/dynatrace-oss/dtctl/main/install.sh | sh
+RUN --mount=type=secret,id=github_token \
+    DTCTL_INSTALL_DIR=/usr/local/bin GITHUB_TOKEN=$(cat /run/secrets/github_token) curl -fsSL https://raw.githubusercontent.com/dynatrace-oss/dtctl/main/install.sh | sh
 
 ENV PATH="/root/.local/bin:/root/.claude/skills/bin:${PATH}"
 RUN curl -fsSL https://claude.ai/install.sh | bash
