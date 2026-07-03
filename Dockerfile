@@ -273,6 +273,7 @@ COPY ./.ssh /root/.ssh
 RUN chmod 700 /root/.ssh
 RUN chmod 600 /root/.ssh/*
 RUN chmod 644 /root/.ssh/*.pub
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 ENV GOPROXY="https://proxy.golang.org,direct"
 ENV GOPRIVATE="git.dynalabs.io/dok/*,github.com/dynatrace-infrastructure/*,bitbucket.lab.dynatrace.org/*"
