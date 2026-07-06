@@ -266,6 +266,8 @@ ENV KUBECONFIG="/root/workspace/kubeconfig"
 RUN git config --global user.email "krzysztof.bannach@dynatrace.com"; \
     git config --global user.name "Krzysztof Bannach"; \
     git config --global --add safe.directory '*'; \
+    git config --global core.autocrlf input; \
+    git config --global core.eol lf; \
     git config --global url."git@git.dynalabs.io:".insteadOf "https://git.dynalabs.io/"; \
     git config --global url."git@github.com:".insteadOf "https://github.com/"
 
@@ -297,7 +299,8 @@ RUN mkdir -p -m 755 /etc/apt/keyrings \
 RUN apt update && apt install -y gh && apt clean
 
 RUN --mount=type=secret,id=github_token \
-    DTCTL_INSTALL_DIR=/usr/local/bin GITHUB_TOKEN=$(cat /run/secrets/github_token) curl -fsSL https://raw.githubusercontent.com/dynatrace-oss/dtctl/main/install.sh | sh
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token) DTCTL_INSTALL_DIR=/usr/local/bin && \
+    curl -fsSL https://raw.githubusercontent.com/dynatrace-oss/dtctl/main/install.sh | sh
 
 ENV PATH="/root/.local/bin:/root/.claude/skills/bin:${PATH}"
 RUN curl -fsSL https://claude.ai/install.sh | bash
