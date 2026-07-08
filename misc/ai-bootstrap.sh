@@ -415,7 +415,30 @@ else
 fi
 
 # ───────────────────────────────────────────────────────────────────────────
-# Phase 9 — Summary
+# Phase 9 — Caveman plugin
+# ───────────────────────────────────────────────────────────────────────────
+
+hdr "Caveman plugin"
+
+if command -v claude >/dev/null 2>&1; then
+  if claude plugin list 2>/dev/null | grep -q 'caveman@caveman'; then
+    skip "caveman plugin"
+  else
+    echo "Installing caveman plugin …"
+    if claude plugin marketplace add JuliusBrussee/caveman >/dev/null 2>&1 \
+       && claude plugin install caveman@caveman >/dev/null 2>&1; then
+      ok "caveman plugin installed"
+      add_pending "Restart Claude Code to activate caveman plugin"
+    else
+      fail "caveman plugin install failed"
+    fi
+  fi
+else
+  todo "claude not in PATH — skipping caveman install"
+fi
+
+# ───────────────────────────────────────────────────────────────────────────
+# Phase 10 — Summary
 # ───────────────────────────────────────────────────────────────────────────
 
 hdr "Summary"

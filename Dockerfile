@@ -303,6 +303,7 @@ RUN --mount=type=secret,id=github_token \
     curl -fsSL https://raw.githubusercontent.com/dynatrace-oss/dtctl/main/install.sh | sh
 
 ENV PATH="/root/.local/bin:/root/.claude/skills/bin:${PATH}"
+ENV CAVEMAN_DEFAULT_MODE=full
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
 #ARG CONTAINER_USERNAME="gl0x"
