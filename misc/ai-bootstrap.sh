@@ -438,7 +438,30 @@ else
 fi
 
 # ───────────────────────────────────────────────────────────────────────────
-# Phase 10 — Summary
+# Phase 10 — Slack plugin
+# ───────────────────────────────────────────────────────────────────────────
+
+hdr "Slack plugin"
+
+if command -v claude >/dev/null 2>&1; then
+  if claude plugin list 2>/dev/null | grep -q 'slack@claude-plugins-official'; then
+    skip "slack plugin"
+  else
+    echo "Installing slack plugin …"
+    if claude plugin marketplace add anthropics/claude-plugins-official >/dev/null 2>&1 \
+       && claude plugin install slack@claude-plugins-official >/dev/null 2>&1; then
+      ok "slack plugin installed"
+      add_pending "Restart Claude Code and complete Slack OAuth to activate slack plugin"
+    else
+      fail "slack plugin install failed"
+    fi
+  fi
+else
+  todo "claude not in PATH — skipping slack plugin install"
+fi
+
+# ───────────────────────────────────────────────────────────────────────────
+# Phase 11 — Summary
 # ───────────────────────────────────────────────────────────────────────────
 
 hdr "Summary"
