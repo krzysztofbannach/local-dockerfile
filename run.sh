@@ -46,6 +46,7 @@ ICM_DATA_VOLUME="-v $HOME/.local/share/icm:/root/.local/share/icm"
 #   junoctl  → JUNOCTL_TOKEN   (access_token JWT; expires in ~5 h; restart ./run.sh to refresh)
 #   bbctl    → BB_TOKEN        (PAT; does not expire)
 #   acli-pii → ACLI_JIRA_TOKEN / ACLI_JIRA_EMAIL / ACLI_JIRA_SITE
+#             token read from ~/.acli-pii/token (plain file, chmod 600) — no D-Bus needed
 #
 # Tokens are extracted from the host keyring at each ./run.sh invocation so they
 # stay current.  If a token cannot be extracted the variable is left empty and
@@ -85,15 +86,15 @@ _inject_tokens() {
   _val=$(secret-tool lookup service bbctl username access-token 2>/dev/null)
   [ -n "$_val" ] && BB_TOKEN_ENV="-e BB_TOKEN=${_val}"
 
-  # acli-pii — Jira credentials stored as a JSON blob in keyring
-  _acli_json=$(secret-tool lookup service atlassian-cli username 'krzysztof.bannach@dynatrace.com' 2>/dev/null)
-  if [ -n "$_acli_json" ]; then
-    _token=$(echo "$_acli_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))" 2>/dev/null)
-    _email=$(echo "$_acli_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('email',''))" 2>/dev/null)
-    _site=$(echo "$_acli_json"  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('site',''))"  2>/dev/null)
-    [ -n "$_token" ] && ACLI_TOKEN_ENV="-e ACLI_JIRA_TOKEN=${_token}"
-    [ -n "$_email" ] && ACLI_EMAIL_ENV="-e ACLI_JIRA_EMAIL=${_email}"
-    [ -n "$_site"  ] && ACLI_SITE_ENV="-e ACLI_JIRA_SITE=${_site}"
+  # acli-pii — token read from ~/.acli-pii/token (plain file, chmod 600).
+  # No D-Bus/keyring needed; email and site are fixed for this single-tenant setup.
+  if [ -f "$HOME/.acli-pii/token" ]; then
+    _token=$(tr -d '[:space:]' < "$HOME/.acli-pii/token")
+    if [ -n "$_token" ]; then
+      ACLI_TOKEN_ENV="-e ACLI_JIRA_TOKEN=${_token}"
+      ACLI_EMAIL_ENV="-e ACLI_JIRA_EMAIL=krzysztof.bannach@dynatrace.com"
+      ACLI_SITE_ENV="-e ACLI_JIRA_SITE=dt-rnd.atlassian.langdock.internal.dynatrace.com"
+    fi
   fi
 }
 # ────────────────────────────────────────────────────────────────────────────────

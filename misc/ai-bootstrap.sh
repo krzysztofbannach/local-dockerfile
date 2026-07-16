@@ -308,23 +308,22 @@ if command -v junoctl >/dev/null 2>&1; then
   fi
 fi
 if command -v acli-pii >/dev/null 2>&1; then
-  if acli-pii jira auth status >/dev/null 2>&1; then
+  _acli_err=$(acli-pii jira auth status 2>&1)
+  if [ $? -eq 0 ]; then
     ok "acli-pii authenticated"; ACLI_AUTHED=1
   elif [ -n "${ACLI_JIRA_TOKEN:-}" ] && [ -n "${ACLI_JIRA_EMAIL:-}" ] && [ -n "${ACLI_JIRA_SITE:-}" ]; then
-    # run.sh injected Jira credentials from the host GNOME Keyring.
-    # acli-pii falls back to ~/.acli-pii/credentials.yaml when no OS keyring is
-    # available — no gnome-keyring-daemon needed.  The dir is bind-mounted from
-    # the host so the credentials file persists across container restarts.
+    # auth status always checks the OS keyring first and always fails in a container.
+    # auth login uses the file fallback (~/.acli-pii/credentials.yaml) — no D-Bus needed.
     if printf '%s\n' "$ACLI_JIRA_TOKEN" | acli-pii jira auth login \
         --site "$ACLI_JIRA_SITE" --email "$ACLI_JIRA_EMAIL" --token >/dev/null 2>&1; then
-      ok "acli-pii authenticated (via ACLI_JIRA_TOKEN env var)"; ACLI_AUTHED=1
+      ok "acli-pii authenticated (via ACLI_JIRA_TOKEN)"; ACLI_AUTHED=1
     else
-      fail "acli-pii: auth login failed — token may be invalid; re-run bootstrap or check ACLI_JIRA_TOKEN"
-      add_pending "acli-pii: debug auth login failure (check ACLI_JIRA_TOKEN validity)"
+      fail "acli-pii: auth login failed — check ACLI_JIRA_TOKEN validity"
+      add_pending "acli-pii: token may be invalid — verify at https://id.atlassian.com/manage-profile/security/api-tokens"
     fi
   else
-    todo "acli-pii: ACLI_JIRA_TOKEN not set — run.sh injects it from the host GNOME Keyring (service=atlassian-cli)"
-    add_pending "acli-pii: ensure run.sh injects ACLI_JIRA_TOKEN (requires secret-tool on host)"
+    fail "acli-pii: auth status failed — ${_acli_err}"
+    add_pending "acli-pii: run inside container: acli-pii jira auth login --site dt-rnd.atlassian.langdock.internal.dynatrace.com --email krzysztof.bannach@dynatrace.com --token"
   fi
 fi
 
