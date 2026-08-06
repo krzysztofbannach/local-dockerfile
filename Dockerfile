@@ -22,6 +22,7 @@ ARG AWSCLI_VERSION="2.17.5"
 ARG GOLANGCI_LINT_VERSION="v1.62.2"
 ARG GOSEC_VERSION="v2.22.10"
 ARG HELMFILE_VERSION="1.5.2"
+ARG ARGO_VERSION="v4.0.8"
 
 FROM $GOLANG_IMAGE AS golang_base
 
@@ -105,6 +106,13 @@ RUN wget "https://github.com/helmfile/helmfile/releases/download/v${HELMFILE_VER
  && tar -zxvf helmfile_${HELMFILE_VERSION}_linux_386.tar.gz \
  && mv helmfile /usr/bin/helmfile \
  && chmod +x /usr/bin/helmfile
+
+FROM alpine_base AS argo_builder
+ARG ARGO_VERSION
+RUN curl -fsSLo /tmp/argo.gz "https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-amd64.gz" \
+ && gunzip /tmp/argo.gz \
+ && mv /tmp/argo /usr/bin/argo \
+ && chmod +x /usr/bin/argo
 
 FROM $JQ_IMAGE AS jq_image
 
@@ -255,6 +263,7 @@ COPY --from=kubectl_builder /usr/bin/kubectl /usr/bin/kubectl
 COPY --from=kubelogin_builder /usr/bin/kubelogin /usr/bin/kubelogin
 COPY --from=kuttl_builder /usr/bin/kuttl /usr/bin/kuttl
 COPY --from=helmfile_builder /usr/bin/helmfile /usr/bin/helmfile
+COPY --from=argo_builder /usr/bin/argo /usr/bin/argo
 RUN pip install pre-commit mkdocs mkdocs-techdocs-core
 
 RUN mkdir -p /usr/share/terraform/plugins; terraform providers mirror /usr/share/terraform/plugins; rm -rf /tmp/*;
@@ -315,6 +324,6 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 
 #USER dok
 #WORKDIR /home/dok
-WORKDIR /root/
+WORKDIR /root/workspace
 
 SHELL ["/bin/bash", "-o", "pipefail", "-cxe"]
