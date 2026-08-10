@@ -23,6 +23,7 @@ ARG GOLANGCI_LINT_VERSION="v1.62.2"
 ARG GOSEC_VERSION="v2.22.10"
 ARG HELMFILE_VERSION="1.5.2"
 ARG ARGO_VERSION="v4.0.8"
+ARG ORAS_VERSION="v1.3.3"
 
 FROM $GOLANG_IMAGE AS golang_base
 
@@ -113,6 +114,12 @@ RUN curl -fsSLo /tmp/argo.gz "https://github.com/argoproj/argo-workflows/release
  && gunzip /tmp/argo.gz \
  && mv /tmp/argo /usr/bin/argo \
  && chmod +x /usr/bin/argo
+
+FROM alpine_base AS oras_builder
+ARG ORAS_VERSION
+RUN curl -fsSLo /tmp/oras.tar.gz "https://github.com/oras-project/oras/releases/download/${ORAS_VERSION}/oras_${ORAS_VERSION#v}_linux_amd64.tar.gz" \
+ && tar -xzf /tmp/oras.tar.gz -C /tmp oras \
+ && install -m 0755 /tmp/oras /usr/bin/oras
 
 FROM $JQ_IMAGE AS jq_image
 
@@ -264,6 +271,7 @@ COPY --from=kubelogin_builder /usr/bin/kubelogin /usr/bin/kubelogin
 COPY --from=kuttl_builder /usr/bin/kuttl /usr/bin/kuttl
 COPY --from=helmfile_builder /usr/bin/helmfile /usr/bin/helmfile
 COPY --from=argo_builder /usr/bin/argo /usr/bin/argo
+COPY --from=oras_builder /usr/bin/oras /usr/bin/oras
 RUN pip install pre-commit mkdocs mkdocs-techdocs-core
 
 RUN mkdir -p /usr/share/terraform/plugins; terraform providers mirror /usr/share/terraform/plugins; rm -rf /tmp/*;
