@@ -209,6 +209,9 @@ RUN apt update && apt install -y build-essential wget curl unzip bash-completion
     && apt clean
 RUN add-apt-repository -y ppa:deadsnakes/ppa && apt update && apt install -y python3.12 && apt clean && ln -s /usr/bin/python3.12 /usr/bin/python
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
+# Pre-install claude-agent-sdk so the security-guidance plugin's SessionStart
+# hook (ensure_agent_sdk.py) is a no-op instead of running pip on first prompt.
+RUN pip3 install claude-agent-sdk
 
 RUN wget https://github.com/tmccombs/hcl2json/releases/download/v0.6.4/hcl2json_linux_amd64
 RUN mv hcl2json_linux_amd64 /usr/bin/hcl2json
