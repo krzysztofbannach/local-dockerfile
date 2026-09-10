@@ -93,7 +93,7 @@ _inject_tokens() {
     if [ -n "$_token" ]; then
       ACLI_TOKEN_ENV="-e ACLI_JIRA_TOKEN=${_token}"
       ACLI_EMAIL_ENV="-e ACLI_JIRA_EMAIL=krzysztof.bannach@dynatrace.com"
-      ACLI_SITE_ENV="-e ACLI_JIRA_SITE=dt-rnd.atlassian.langdock.internal.dynatrace.com"
+      ACLI_SITE_ENV="-e ACLI_JIRA_SITE=dt-rnd.atlassian.net"
     fi
   fi
 }
