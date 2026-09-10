@@ -31,6 +31,9 @@ GH_CONFIG_VOLUME=""
 DTCTL_CONFIG_VOLUME="-v $HOME/.config/dtctl:/root/.config/dtctl"
 DTCTL_OAUTH_VOLUME="-v $HOME/.local/share/dtctl:/root/.local/share/dtctl"
 DTCTL_TOKEN_STORAGE_ENV="-e DTCTL_TOKEN_STORAGE=file"
+# Pin DT_ENVIRONMENT to the dtctl current-context tenant so tools inside the
+# container target the correct environment without manual configuration.
+DT_ENVIRONMENT_ENV="-e DT_ENVIRONMENT=https://igo04931.sprint.apps.dynatracelabs.com"
 # junoctl: bind-mount host config (installed skills list); token arrives via JUNOCTL_TOKEN env var
 JUNOCTL_CONFIG_VOLUME="-v $HOME/.config/junoctl:/root/.config/junoctl"
 # acli-pii: config + credentials file.  No keyring needed — tool falls back to
@@ -152,6 +155,7 @@ function run() {
     $CLAUDE_CREDS_VOLUME \
     $GH_CONFIG_VOLUME \
     $DTCTL_TOKEN_STORAGE_ENV \
+    $DT_ENVIRONMENT_ENV \
     $DTCTL_CONFIG_VOLUME \
     $DTCTL_OAUTH_VOLUME \
     $JUNOCTL_CONFIG_VOLUME \
