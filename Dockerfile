@@ -19,7 +19,7 @@ ARG KUBECTL_VERSION=1.34.2
 ARG KUBELOGIN_VERSION=0.2.13
 ARG KUTTL_VERSION=0.24.0
 ARG AWSCLI_VERSION="2.17.5"
-ARG GOLANGCI_LINT_VERSION="v1.62.2"
+ARG GOLANGCI_LINT_VERSION="v2.13.1"
 ARG GOSEC_VERSION="v2.22.10"
 ARG HELMFILE_VERSION="1.5.2"
 ARG ARGO_VERSION="v4.0.8"
@@ -211,7 +211,7 @@ RUN add-apt-repository -y ppa:deadsnakes/ppa && apt update && apt install -y pyt
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 # Pre-install claude-agent-sdk so the security-guidance plugin's SessionStart
 # hook (ensure_agent_sdk.py) is a no-op instead of running pip on first prompt.
-RUN pip3 install claude-agent-sdk
+RUN pip3 install claude-agent-sdk --ignore-installed typing-extensions
 
 RUN wget https://github.com/tmccombs/hcl2json/releases/download/v0.6.4/hcl2json_linux_amd64
 RUN mv hcl2json_linux_amd64 /usr/bin/hcl2json
@@ -223,7 +223,11 @@ ENV GOPATH="/opt/go"
 ENV PATH="${PATH}:${GOPATH}/bin"
 
 # binary will be $(go env GOPATH)/bin/golangci-lint
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin ${GOLANGCI_LINT_VERSION}
+RUN set -eux; \
+    ver="${GOLANGCI_LINT_VERSION#v}"; \
+    mkdir -p "$(go env GOPATH)/bin"; \
+    curl -fsSL "https://github.com/golangci/golangci-lint/releases/download/${GOLANGCI_LINT_VERSION}/golangci-lint-${ver}-linux-amd64.tar.gz" \
+      | tar xz --strip-components=1 -C "$(go env GOPATH)/bin" "golangci-lint-${ver}-linux-amd64/golangci-lint"
 
 #RUN curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin ${GOSEC_VERSION} #TODO kbannach
 
