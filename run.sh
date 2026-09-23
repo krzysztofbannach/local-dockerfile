@@ -14,7 +14,7 @@ BOOTSTRAP_VOLUME="-v ./misc/ai-bootstrap.sh:/root/ai-bootstrap.sh:ro"
 
 WORKSPACE_VOLUME="-v $HOME/workspace:/root/workspace"
 DOCKER_SOCK_VOLUME="-v /var/run/docker.sock:/var/run/docker.sock"
-DOCKER_CONFIG_VOLUME="-v $HOME/.docker/config.json:/root/.docker/config.json:ro"
+DOCKER_CONFIG_VOLUME="-v $HOME/.docker:/root/.docker"
 
 AWS_VOLUME="-v $HOME/.aws:/root/.aws"
 GCLOUD_VOLUME="-v $HOME/.config/gcloud:/root/.config/gcloud/"
@@ -135,7 +135,7 @@ function run() {
   # them as directories otherwise, breaking the mounts).
   touch "$(dirname "$0")/misc/.claude.json"
   touch "$HOME/.claude/.credentials.json"
-  touch "$HOME/.docker/config.json"
+  mkdir -p "$HOME/.docker"
   # Ensure host config dirs exist for tools that have no host-side config yet
   mkdir -p "$HOME/.config/gh" "$HOME/.config/junoctl" "$HOME/.acli-pii"
 
