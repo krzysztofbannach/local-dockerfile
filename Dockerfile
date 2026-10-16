@@ -281,7 +281,7 @@ COPY --from=kuttl_builder /usr/bin/kuttl /usr/bin/kuttl
 COPY --from=helmfile_builder /usr/bin/helmfile /usr/bin/helmfile
 COPY --from=argo_builder /usr/bin/argo /usr/bin/argo
 COPY --from=oras_builder /usr/bin/oras /usr/bin/oras
-RUN pip install pre-commit mkdocs mkdocs-techdocs-core
+RUN pip install pre-commit mkdocs mkdocs-techdocs-core --ignore-installed packaging
 
 RUN mkdir -p /usr/share/terraform/plugins; terraform providers mirror /usr/share/terraform/plugins; rm -rf /tmp/*;
 
