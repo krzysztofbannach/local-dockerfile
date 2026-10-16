@@ -5,6 +5,7 @@ ARG GOLANG_IMAGE=golang:1.26
 ARG ALPINE_IMAGE=alpine:3.19
 ARG K9S_VERSION=v0.51.0
 ARG POPEYE_VERSION=v0.22.1
+ARG CLAUDE_CODE_VERSION=2.1.301
 ARG KUBECOLOR_VERSION=v0.0.25
 ARG CONTROLLER_GEN_VERSION=v0.19.0
 ARG DELVE_VERSION=v1.25.2
@@ -158,6 +159,7 @@ FROM $REPOSITORY/$IMAGE
 ARG AWSCLI_VERSION
 ARG GOLANGCI_LINT_VERSION
 ARG GOSEC_VERSION
+ARG CLAUDE_CODE_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Include prebuilt operators' dependencies in the builder image
@@ -328,7 +330,7 @@ RUN --mount=type=secret,id=github_token \
 
 ENV PATH="/root/.local/bin:/root/.claude/skills/bin:${PATH}"
 ENV CAVEMAN_DEFAULT_MODE=full
-RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}"
 
 #ARG CONTAINER_USERNAME="gl0x"
 # add DoK user
