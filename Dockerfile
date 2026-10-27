@@ -15,6 +15,7 @@ ARG YQ_IMAGE=mikefarah/yq:4.46.1
 ARG MOCKGEN_VERSION=v1.5.0
 ARG KIND_VERSION=v0.30.0
 ARG KUBEBUILDER_VERSION=v4.11.1
+ARG OPERATOR_SDK_VERSION=v1.42.3
 ARG HELM_DOCS_VERSION=latest
 ARG KUBECTL_VERSION=1.34.2
 ARG KUBELOGIN_VERSION=0.2.13
@@ -101,6 +102,11 @@ FROM alpine_base AS kuttl_builder
 ARG KUTTL_VERSION
 RUN curl -fsSLo /usr/bin/kuttl "https://github.com/kudobuilder/kuttl/releases/download/v${KUTTL_VERSION}/kubectl-kuttl_${KUTTL_VERSION}_linux_x86_64" \
  && chmod +x /usr/bin/kuttl
+
+FROM alpine_base AS operator_sdk_builder
+ARG OPERATOR_SDK_VERSION
+RUN curl -fsSLo /usr/bin/operator-sdk "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64" \
+ && chmod +x /usr/bin/operator-sdk
 
 FROM alpine_base AS helmfile_builder
 ARG HELMFILE_VERSION
@@ -278,6 +284,7 @@ COPY --from=govulncheck_builder /go/bin/govulncheck /usr/bin/govulncheck
 COPY --from=kubectl_builder /usr/bin/kubectl /usr/bin/kubectl
 COPY --from=kubelogin_builder /usr/bin/kubelogin /usr/bin/kubelogin
 COPY --from=kuttl_builder /usr/bin/kuttl /usr/bin/kuttl
+COPY --from=operator_sdk_builder /usr/bin/operator-sdk /usr/bin/operator-sdk
 COPY --from=helmfile_builder /usr/bin/helmfile /usr/bin/helmfile
 COPY --from=argo_builder /usr/bin/argo /usr/bin/argo
 COPY --from=oras_builder /usr/bin/oras /usr/bin/oras
